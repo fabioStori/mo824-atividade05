@@ -3,6 +3,7 @@ package problems.qbf.solvers;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.List;
 
 import metaheuristics.tabusearch.AbstractTS;
 import problems.qbf.QBF_Inverse;
@@ -20,7 +21,14 @@ import solutions.Solution;
  */
 public class TS_QBF extends AbstractTS<Integer> {
 	
-	private final Integer fake = new Integer(-1);
+	/**
+	 * KQBFInverse obj function
+	 */
+	public QBF_Inverse QBFInverse;
+
+	public List<Integer> allCandidateList;
+
+	private final Integer fake = Integer.valueOf(-1);
 
 	/**
 	 * Constructor for the TS_QBF class. An inverse QBF objective function is
@@ -30,14 +38,13 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 *            The Tabu tenure parameter.
 	 * @param iterations
 	 *            The number of iterations which the TS will be executed.
-	 * @param filename
-	 *            Name of the file for which the objective function parameters
-	 *            should be read.
 	 * @throws IOException
 	 *             necessary for I/O operations.
 	 */
-	public TS_QBF(Integer tenure, Integer iterations, String filename) throws IOException {
-		super(new QBF_Inverse(filename), tenure, iterations);
+	public TS_QBF(Integer tenure, Integer iterations, Integer maxTimeInSeconds, QBF_Inverse QBFInverse) throws IOException {
+		super(QBFInverse, tenure, iterations, maxTimeInSeconds);
+		this.QBFInverse = QBFInverse;
+		this.allCandidateList = makeCL();
 	}
 
 	/* (non-Javadoc)
@@ -48,7 +55,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 
 		ArrayList<Integer> _CL = new ArrayList<Integer>();
 		for (int i = 0; i < ObjFunction.getDomainSize(); i++) {
-			Integer cand = new Integer(i);
+			Integer cand = Integer.valueOf(i);;
 			_CL.add(cand);
 		}
 
@@ -88,8 +95,21 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 */
 	@Override
 	public void updateCL() {
+		Double[] weights = QBFInverse.getWeights();
+		// System.out.println("weights " + weights);
+		Double freeCapacity = QBFInverse.getCapacity() - sol.usedCapacity;
+		// System.out.println("freeCapacity " + freeCapacity);
 
-		// do nothing
+		/*
+		* Select only viable candidates given the free capacity and update the CL.
+		* */
+		ArrayList<Integer> newCL = new ArrayList<>();
+		for (Integer candidate : allCandidateList) {
+			if (!sol.contains(candidate) && weights[candidate] <= freeCapacity) {
+				newCL.add(candidate);
+			}
+		}
+		CL = newCL;
 
 	}
 
@@ -104,6 +124,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public Solution<Integer> createEmptySol() {
 		Solution<Integer> sol = new Solution<Integer>();
 		sol.cost = 0.0;
+		sol.usedCapacity = 0.0;
 		return sol;
 	}
 
@@ -185,7 +206,13 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public static void main(String[] args) throws IOException {
 
 		long startTime = System.currentTimeMillis();
-		TS_QBF tabusearch = new TS_QBF(20, 1000, "instances/qbf/qbf100");
+
+		QBF_Inverse QBF_Inverse = new QBF_Inverse("instances/kqbf/kqbf100");
+		int maxTimeInSeconds = 1 * 60; // 30 minutes
+		int ternure = 20;
+		int iterations = 1000;
+
+		TS_QBF tabusearch = new TS_QBF(ternure, iterations, maxTimeInSeconds, QBF_Inverse);
 		Solution<Integer> bestSol = tabusearch.solve();
 		System.out.println("maxVal = " + bestSol);
 		long endTime   = System.currentTimeMillis();

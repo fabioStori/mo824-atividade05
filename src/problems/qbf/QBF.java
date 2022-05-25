@@ -31,6 +31,16 @@ public class QBF implements Evaluator<Integer> {
 	public final Integer size;
 
 	/**
+	 * Max capacity for the KQBF problem
+	 */
+	public Double capacity;
+
+	/**
+	 * The matrix of weights for the KQBF
+	 */
+	public Double[] weights;
+
+	/**
 	 * The array of numbers representing the domain.
 	 */
 	public final Double[] variables;
@@ -83,6 +93,14 @@ public class QBF implements Evaluator<Integer> {
 		return size;
 	}
 
+	public Double getCapacity() {
+		return capacity;
+	}
+
+	public Double[] getWeights() {
+		return weights;
+	}
+
 	/**
 	 * {@inheritDoc} In the case of a QBF, the evaluation correspond to
 	 * computing a matrix multiplication x'.A.x. A better way to evaluate this
@@ -96,7 +114,7 @@ public class QBF implements Evaluator<Integer> {
 	public Double evaluate(Solution<Integer> sol) {
 
 		setVariables(sol);
-		return sol.cost = evaluateQBF();
+		return sol.cost = evaluateQBF(sol);
 
 	}
 
@@ -106,7 +124,7 @@ public class QBF implements Evaluator<Integer> {
 	 * 
 	 * @return The value of the QBF.
 	 */
-	public Double evaluateQBF() {
+	public Double evaluateQBF(Solution<Integer> sol) {
 
 		Double aux = (double) 0, sum = (double) 0;
 		Double vecAux[] = new Double[size];
@@ -119,6 +137,12 @@ public class QBF implements Evaluator<Integer> {
 			sum += aux * variables[i];
 			aux = (double) 0;
 		}
+
+		Double capacity = 0.0;
+		for (int i = 0; i < size; i++) {
+			capacity += variables[i] == 1.0 ? weights[i] : 0;
+		}
+		sol.usedCapacity = capacity;
 
 		return sum;
 
@@ -280,6 +304,16 @@ public class QBF implements Evaluator<Integer> {
 		Integer _size = (int) stok.nval;
 		A = new Double[_size][_size];
 
+		stok.nextToken();
+		capacity = stok.nval;
+		weights = new Double[_size];
+		A = new Double[_size][_size];
+
+		for (int i = 0; i < _size; i++) {
+			stok.nextToken();
+			weights[i] = stok.nval;
+		}
+
 		for (int i = 0; i < _size; i++) {
 			for (int j = i; j < _size; j++) {
 				stok.nextToken();
@@ -347,7 +381,7 @@ public class QBF implements Evaluator<Integer> {
 					qbf.variables[j] = 1.0;
 			}
 			//System.out.println("x = " + Arrays.toString(qbf.variables));
-			Double eval = qbf.evaluateQBF();
+			Double eval = qbf.evaluateQBF(new Solution<>());
 			//System.out.println("f(x) = " + eval);
 			if (maxVal < eval)
 				maxVal = eval;
@@ -359,17 +393,14 @@ public class QBF implements Evaluator<Integer> {
 			qbf.variables[j] = 0.0;
 		}
 		System.out.println("x = " + Arrays.toString(qbf.variables));
-		System.out.println("f(x) = " + qbf.evaluateQBF());
+		System.out.println("f(x) = " + qbf.evaluateQBF(new Solution<>()));
 
 		// evaluates the all-ones array.
 		for (int j = 0; j < qbf.size; j++) {
 			qbf.variables[j] = 1.0;
 		}
 		System.out.println("x = " + Arrays.toString(qbf.variables));
-		System.out.println("f(x) = " + qbf.evaluateQBF());
-		
-		
-
+		System.out.println("f(x) = " + qbf.evaluateQBF(new Solution<>()));
 	}
 
 }
