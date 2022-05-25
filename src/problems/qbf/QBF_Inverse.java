@@ -1,5 +1,7 @@
 package problems.qbf;
 
+import solutions.Solution;
+
 import java.io.IOException;
 
 /**
@@ -29,8 +31,8 @@ public class QBF_Inverse extends QBF {
 	 * @see problems.qbf.QBF#evaluate()
 	 */
 	@Override
-	public Double evaluateQBF() {
-		return -super.evaluateQBF();
+	public Double evaluateQBF(Solution<Integer> sol) {
+		return -super.evaluateQBF(sol);
 	}
 	
 	/* (non-Javadoc)

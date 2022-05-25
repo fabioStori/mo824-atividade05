@@ -6,6 +6,7 @@ package metaheuristics.tabusearch;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Random;
+import java.time.Instant;
 
 import problems.Evaluator;
 import solutions.Solution;
@@ -81,6 +82,11 @@ public abstract class AbstractTS<E> {
 	protected ArrayDeque<E> TL;
 
 	/**
+	 * the max time to run the solver in seconds
+	 */
+	protected int maxTimeInSeconds;
+
+	/**
 	 * Creates the Candidate List, which is an ArrayList of candidate elements
 	 * that can enter a solution.
 	 * 
@@ -142,10 +148,11 @@ public abstract class AbstractTS<E> {
 	 * @param iterations
 	 *            The number of iterations which the TS will be executed.
 	 */
-	public AbstractTS(Evaluator<E> objFunction, Integer tenure, Integer iterations) {
+	public AbstractTS(Evaluator<E> objFunction, Integer tenure, Integer iterations, Integer maxTimeInSeconds) {
 		this.ObjFunction = objFunction;
 		this.tenure = tenure;
 		this.iterations = iterations;
+		this.maxTimeInSeconds = maxTimeInSeconds;
 	}
 
 	/**
@@ -214,6 +221,7 @@ public abstract class AbstractTS<E> {
 	 */
 	public Solution<E> solve() {
 
+		Instant started = Instant.now();
 		bestSol = createEmptySol();
 		constructiveHeuristic();
 		TL = makeTL();
@@ -223,6 +231,10 @@ public abstract class AbstractTS<E> {
 				bestSol = new Solution<E>(sol);
 				if (verbose)
 					System.out.println("(Iter. " + i + ") BestSol = " + bestSol);
+			}
+			if (Instant.now().getEpochSecond() > started.plusSeconds(maxTimeInSeconds).getEpochSecond()) {
+				System.out.println("Interrupting");
+				break;
 			}
 		}
 
