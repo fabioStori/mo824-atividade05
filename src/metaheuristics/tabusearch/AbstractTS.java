@@ -227,6 +227,12 @@ public abstract class AbstractTS<E> {
 		TL = makeTL();
 		for (int i = 0; i < iterations; i++) {
 			neighborhoodMove();
+			// if (iterations > 100) {
+			// 	sol.frequency
+			// 	sol.frequency.decrescente()
+			// 	sol.newBase = sol.frequency[0:3]
+			// }			
+			
 			if (bestSol.cost > sol.cost) {
 				bestSol = new Solution<E>(sol);
 				if (verbose)

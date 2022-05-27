@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.Collections;
 
 import metaheuristics.tabusearch.AbstractTS;
 import problems.qbf.QBF_Inverse;
 import solutions.Solution;
-
-
 
 /**
  * Metaheuristic TS (Tabu Search) for obtaining an optimal solution to a QBF
@@ -28,7 +28,14 @@ public class TS_QBF extends AbstractTS<Integer> {
 
 	public List<Integer> allCandidateList;
 
+	public Boolean useProbabilisticTS;
+
 	private final Integer fake = Integer.valueOf(-1);
+	
+	/**
+	 * a random number generator
+	 */
+	static Random rng = new Random(0);
 
 	/**
 	 * Constructor for the TS_QBF class. An inverse QBF objective function is
@@ -41,9 +48,10 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 * @throws IOException
 	 *             necessary for I/O operations.
 	 */
-	public TS_QBF(Integer tenure, Integer iterations, Integer maxTimeInSeconds, QBF_Inverse QBFInverse) throws IOException {
+	public TS_QBF(Integer tenure, Integer iterations, Integer maxTimeInSeconds, QBF_Inverse QBFInverse, Boolean useProbabilisticTS) throws IOException {
 		super(QBFInverse, tenure, iterations, maxTimeInSeconds);
 		this.QBFInverse = QBFInverse;
+		this.useProbabilisticTS = useProbabilisticTS;
 		this.allCandidateList = makeCL();
 	}
 
@@ -55,7 +63,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 
 		ArrayList<Integer> _CL = new ArrayList<Integer>();
 		for (int i = 0; i < ObjFunction.getDomainSize(); i++) {
-			Integer cand = Integer.valueOf(i);;
+			Integer cand = Integer.valueOf(i);
 			_CL.add(cand);
 		}
 
@@ -143,6 +151,17 @@ public class TS_QBF extends AbstractTS<Integer> {
 		minDeltaCost = Double.POSITIVE_INFINITY;
 		updateCL();
 		// Evaluate insertions
+
+		if (useProbabilisticTS && CL.size() > 0) {
+			// System.out.println("CL.size() " + CL.size());
+			// System.out.println("rng.nextInt(CL.size()) " + rng.nextInt(CL.size()));
+			
+			int randomCLSize = rng.nextInt(CL.size());
+			ArrayList<Integer> newRandomList = CL;
+			Collections.shuffle(newRandomList);
+			newRandomList.subList(0, randomCLSize);
+		}
+
 		for (Integer candIn : CL) {
 			Double deltaCost = ObjFunction.evaluateInsertionCost(candIn, sol);
 			if (!TL.contains(candIn) || sol.cost+deltaCost < bestSol.cost) {
@@ -207,12 +226,13 @@ public class TS_QBF extends AbstractTS<Integer> {
 
 		long startTime = System.currentTimeMillis();
 
-		QBF_Inverse QBF_Inverse = new QBF_Inverse("instances/kqbf/kqbf100");
+		QBF_Inverse QBF_Inverse = new QBF_Inverse("instances/kqbf/kqbf080");
 		int maxTimeInSeconds = 1 * 60; // 30 minutes
 		int ternure = 20;
 		int iterations = 1000;
+		boolean useProbabilisticTS = false;
 
-		TS_QBF tabusearch = new TS_QBF(ternure, iterations, maxTimeInSeconds, QBF_Inverse);
+		TS_QBF tabusearch = new TS_QBF(ternure, iterations, maxTimeInSeconds, QBF_Inverse, useProbabilisticTS);
 		Solution<Integer> bestSol = tabusearch.solve();
 		System.out.println("maxVal = " + bestSol);
 		long endTime   = System.currentTimeMillis();
