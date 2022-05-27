@@ -153,13 +153,11 @@ public class TS_QBF extends AbstractTS<Integer> {
 		// Evaluate insertions
 
 		if (useProbabilisticTS && CL.size() > 0) {
-			// System.out.println("CL.size() " + CL.size());
-			// System.out.println("rng.nextInt(CL.size()) " + rng.nextInt(CL.size()));
-			
 			int randomCLSize = rng.nextInt(CL.size());
-			ArrayList<Integer> newRandomList = CL;
-			Collections.shuffle(newRandomList);
-			newRandomList.subList(0, randomCLSize);
+			ArrayList<Integer> newRandomArrayList = new ArrayList<>(CL);
+			Collections.shuffle(newRandomArrayList, rng);
+			List<Integer> newRandomList = newRandomArrayList.subList(0, randomCLSize);
+			CL = newRandomList;
 		}
 
 		for (Integer candIn : CL) {
@@ -226,8 +224,8 @@ public class TS_QBF extends AbstractTS<Integer> {
 
 		long startTime = System.currentTimeMillis();
 
-		QBF_Inverse QBF_Inverse = new QBF_Inverse("instances/kqbf/kqbf080");
-		int maxTimeInSeconds = 1 * 60; // 30 minutes
+		QBF_Inverse QBF_Inverse = new QBF_Inverse("instances/kqbf/kqbf020");
+		int maxTimeInSeconds = 30 * 60; // 30 minutes
 		int ternure = 20;
 		int iterations = 1000;
 		boolean useProbabilisticTS = false;

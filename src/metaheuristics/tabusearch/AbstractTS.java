@@ -5,6 +5,7 @@ package metaheuristics.tabusearch;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.time.Instant;
 
@@ -69,7 +70,7 @@ public abstract class AbstractTS<E> {
 	/**
 	 * the Candidate List of elements to enter the solution.
 	 */
-	protected ArrayList<E> CL;
+	protected List<E> CL;
 
 	/**
 	 * the Restricted Candidate List of elements to enter the solution.
@@ -227,11 +228,6 @@ public abstract class AbstractTS<E> {
 		TL = makeTL();
 		for (int i = 0; i < iterations; i++) {
 			neighborhoodMove();
-			// if (iterations > 100) {
-			// 	sol.frequency
-			// 	sol.frequency.decrescente()
-			// 	sol.newBase = sol.frequency[0:3]
-			// }			
 			
 			if (bestSol.cost > sol.cost) {
 				bestSol = new Solution<E>(sol);
