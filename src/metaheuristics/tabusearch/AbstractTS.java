@@ -226,6 +226,7 @@ public abstract class AbstractTS<E> {
 		bestSol = createEmptySol();
 		constructiveHeuristic();
 		TL = makeTL();
+
 		for (int i = 0; i < iterations; i++) {
 			neighborhoodMove();
 			
@@ -233,7 +234,8 @@ public abstract class AbstractTS<E> {
 				bestSol = new Solution<E>(sol);
 				if (verbose)
 					System.out.println("(Iter. " + i + ") BestSol = " + bestSol);
-			}
+			}					
+
 			if (Instant.now().getEpochSecond() > started.plusSeconds(maxTimeInSeconds).getEpochSecond()) {
 				System.out.println("Interrupting");
 				break;

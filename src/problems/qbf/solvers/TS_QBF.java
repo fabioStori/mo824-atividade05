@@ -1,6 +1,7 @@
 package problems.qbf.solvers;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,11 +32,13 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public Boolean useProbabilisticTS;
 
 	private final Integer fake = Integer.valueOf(-1);
+
+	public ArrayList<Integer> SF;
 	
 	/**
 	 * a random number generator
 	 */
-	static Random rng = new Random(0);
+	static Random rng = new Random();
 
 	/**
 	 * Constructor for the TS_QBF class. An inverse QBF objective function is
@@ -71,6 +74,18 @@ public class TS_QBF extends AbstractTS<Integer> {
 
 	}
 
+	/* 
+	 * 
+	 */	
+	public ArrayList<Integer> createSolutionFrequencyArray() {
+
+		ArrayList<Integer> _SF = new ArrayList<Integer>();
+		for (int i = 0; i < ObjFunction.getDomainSize(); i++) {			
+			_SF.add(0);
+		}
+		return _SF;
+	}
+
 	/* (non-Javadoc)
 	 * @see metaheuristics.tabusearch.AbstractTS#makeRCL()
 	 */
@@ -102,7 +117,8 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 * @see metaheuristics.tabusearch.AbstractTS#updateCL()
 	 */
 	@Override
-	public void updateCL() {
+	public void 
+	updateCL() {
 		Double[] weights = QBFInverse.getWeights();
 		// System.out.println("weights " + weights);
 		Double freeCapacity = QBFInverse.getCapacity() - sol.usedCapacity;
@@ -144,7 +160,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 */
 	@Override
 	public Solution<Integer> neighborhoodMove() {
-
+		// System.out.println("neighborhoodMove sol1: "+sol);
 		Double minDeltaCost;
 		Integer bestCandIn = null, bestCandOut = null;
 
@@ -153,6 +169,9 @@ public class TS_QBF extends AbstractTS<Integer> {
 		// Evaluate insertions
 
 		if (useProbabilisticTS && CL.size() > 0) {
+			// System.out.println("CL.size() " + CL.size());
+			// System.out.println("rng.nextInt(CL.size()) " + rng.nextInt(CL.size()));
+			rng.setSeed(10);
 			int randomCLSize = rng.nextInt(CL.size());
 			ArrayList<Integer> newRandomArrayList = new ArrayList<>(CL);
 			Collections.shuffle(newRandomArrayList, rng);
@@ -216,6 +235,62 @@ public class TS_QBF extends AbstractTS<Integer> {
 		return null;
 	}
 
+	public void updateElementFrequencyArray(ArrayList<Integer> sol)
+	{		
+		for (int i = 0; i < sol.size(); i++) {			
+			SF.set(sol.get(i), SF.get(sol.get(i))+1);
+		}		
+	}
+
+	public void updateTL()
+	{	
+		Double fixedElements = new Double(sol.size())/2.0;
+		Double ceil = Math.ceil(fixedElements);
+		
+		// TL = makeTL();
+		for (int i = 0; i < ceil; i++) {		
+			Integer moreFreq =  SF.indexOf(Collections.max(SF));			
+			TL.poll();
+			TL.add(moreFreq);			
+			SF.set(moreFreq, 0);		
+
+		}
+		SF = createSolutionFrequencyArray();
+	}
+	
+	public Solution<Integer> solveIntensification() {
+
+		Instant started = Instant.now();
+		bestSol = createEmptySol();
+		constructiveHeuristic();
+		TL = makeTL();
+		SF = createSolutionFrequencyArray();		
+
+		for (int i = 0; i < iterations; i++) {
+			neighborhoodMove();		
+			
+			if (bestSol.cost > sol.cost) {
+				bestSol = new Solution<Integer>(sol);
+				if (verbose)
+					System.out.println("(Iter. " + i + ") BestSol = " + bestSol);
+			}
+			
+			updateElementFrequencyArray(bestSol);
+			
+			if(i > 0 && (i % (iterations/10)) == 0){		
+				updateTL();	
+				sol = new Solution<Integer>(bestSol);				
+			}	
+						
+
+			if (Instant.now().getEpochSecond() > started.plusSeconds(maxTimeInSeconds).getEpochSecond()) {
+				System.out.println("Interrupting");
+				break;
+			}
+		}
+		return bestSol;
+	}
+
 	/**
 	 * A main method used for testing the TS metaheuristic.
 	 * 
@@ -224,19 +299,19 @@ public class TS_QBF extends AbstractTS<Integer> {
 
 		long startTime = System.currentTimeMillis();
 
-		QBF_Inverse QBF_Inverse = new QBF_Inverse("instances/kqbf/kqbf020");
+		QBF_Inverse QBF_Inverse = new QBF_Inverse("instances/kqbf/kqbf040");
 		int maxTimeInSeconds = 30 * 60; // 30 minutes
 		int ternure = 20;
 		int iterations = 1000;
 		boolean useProbabilisticTS = false;
 
 		TS_QBF tabusearch = new TS_QBF(ternure, iterations, maxTimeInSeconds, QBF_Inverse, useProbabilisticTS);
-		Solution<Integer> bestSol = tabusearch.solve();
+		Solution<Integer> bestSol = tabusearch.solveIntensification();
 		System.out.println("maxVal = " + bestSol);
 		long endTime   = System.currentTimeMillis();
 		long totalTime = endTime - startTime;
-		System.out.println("Time = "+(double)totalTime/(double)1000+" seg");
+		System.out.println("Time = "+(double)totalTime/(double)1000+" seg");		
 
 	}
-
 }
+ 
