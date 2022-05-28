@@ -173,9 +173,8 @@ public class TS_QBF extends AbstractTS<Integer> {
 			// System.out.println("rng.nextInt(CL.size()) " + rng.nextInt(CL.size()));
 			rng.setSeed(10);
 			int randomCLSize = rng.nextInt(CL.size());
-			ArrayList<Integer> newRandomArrayList = new ArrayList<>(CL);
-			Collections.shuffle(newRandomArrayList, rng);
-			List<Integer> newRandomList = newRandomArrayList.subList(0, randomCLSize);
+			Collections.shuffle(CL, rng);
+			List<Integer> newRandomList = CL.subList(0, randomCLSize);
 			CL = newRandomList;
 		}
 
@@ -302,7 +301,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 		QBF_Inverse QBF_Inverse = new QBF_Inverse("instances/kqbf/kqbf040");
 		int maxTimeInSeconds = 30 * 60; // 30 minutes
 		int ternure = 20;
-		int iterations = 1000;
+		int iterations = 5000;
 		boolean useProbabilisticTS = false;
 
 		TS_QBF tabusearch = new TS_QBF(ternure, iterations, maxTimeInSeconds, QBF_Inverse, useProbabilisticTS);
